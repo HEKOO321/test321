@@ -23,7 +23,6 @@ const responseObject = {
   "hola": "Hola amigo!",
   "ily": "I love you too!",
   "lol": "ROFL.",
-  "shelly": "Don't poke my queen!",
   "espe": "EmperialsPE is for lyfe.",
   "bye": "See you honey!",
   "bai": "See you honey!",
@@ -71,22 +70,22 @@ client.on("guildDelete", guild => {
 
 client.on("message", async message => {
   // This event will run on every single message received, from any channel or DM.
-  
+
   // It's good practice to ignore other bots. This also makes your bot ignore itself
   // and not get into a spam loop (we call that "botception").
   if(message.author.bot) return;
-  
-  // Also good practice to ignore any message that does not start with our prefix, 
+
+  // Also good practice to ignore any message that does not start with our prefix,
   // which is set in the configuration file.
   if(message.content.indexOf(config.prefix) !== 0) return;
-  
-  // Here we separate our "command" name, and our "arguments" for the command. 
+
+  // Here we separate our "command" name, and our "arguments" for the command.
   // e.g. if we have the message "+say Is this the real life?" , we'll get the following:
   // command = say
   // args = ["Is", "this", "the", "real", "life?"]
   const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
   const command = args.shift().toLowerCase();
-  
+
   // Let's go with a few common example commands! Feel free to delete or change those.
   if(responseObject[message.content]) {
     message.channel.send(responseObject[message.content]);
@@ -106,9 +105,9 @@ client.on("message", async message => {
     // Calculates ping between sending a message and editing it, giving a nice round-trip latency.
     // The second ping is an average latency between the bot and the websocket server (one-way, not round-trip)
     message.channel.send("Tesing is finhsed. Successful. Permission granted.");
-  
+
   }
- 
+
   const swearWords = ["darn", "shucks", "frak", "shite"];
 if( swearWords.some(word => message.content.includes(word)) ) {
   message.reply("Oh no you said a bad word!!!");
@@ -116,16 +115,31 @@ if( swearWords.some(word => message.content.includes(word)) ) {
 }
    if(command === "info") {
  const embed = new Discord.RichEmbed();
- request('http://pmbanners.azurewebsites.net/play.emperials.net/json', { json: true }, (err, res, body) => {
+ request('https://minecraftpocket-servers.com/api/?object=servers&element=detail&key=yaFjJsbnJL6bRozEPWc6jh18CU1yN87etk', { json: true }, (err, res, body) => {
   if (err) { return console.log(err); }
 embed.setColor(0xED360F);
-embed.setDescription(body.currentPlayers + ` Player(s).`);
-embed.addField(`SkyBlock`, body.currentPlayers + ` Player(s)`).setAuthor(`Global`);
-embed.addField(`Anarchy`, `Offline`);
+embed.setDescription(body.players + ` Player(s).`);
+embed.addField(`SkyBlock`, body.players + ` Player(s)`).setAuthor(`Global`);
+embed.addField(`Version`, "v" +body.version);
 embed.setThumbnail("https://a.imge.to/2019/05/30/vV5Mk.png");
 message.channel.send( { embed: embed } );
 });
   }
+    if(command === "vote") {
+        const embed = new Discord.RichEmbed();
+        request('https://minecraftpocket-servers.com/api/?object=servers&element=detail&key=yaFjJsbnJL6bRozEPWc6jh18CU1yN87etk', { json: true }, (err, res, body) => {
+            if (err) { return console.log(err); }
+            embed.setColor(0xED360F);
+            embed.setDescription(body.votes + ` Vote(s)`);
+            embed.addField(`Total Score`, body.score + ` Score`).setAuthor(`Total Votes`);
+            embed.addField(`Rank`, body.rank);
+            embed.addField("Link", "Vote [here](https://discordjs.guide/ 'optional hovertext') and support the server!");
+            embed.setTimestamp();
+            embed.setFooter("Thank you for voting!");
+            embed.setThumbnail("https://a.imge.to/2019/05/30/vV5Mk.png");
+            message.channel.send( { embed: embed } );
+        });
+    }
   if(command === "info1") {
  const embed = new Discord.RichEmbed();
  https.get('https://pmbanners.azurewebsites.net/play.emperials.net/json', (resp) => {
@@ -171,16 +185,39 @@ message.channel.send( { embed: embed } );
              message.channel.send(status);
         });
    }
-  
-  if(command === "say") {
-    // makes the bot say something and delete the message. As an example, it's open to anyone to use. 
-    // To get the "message" itself we join the `args` back into a string with spaces: 
-    const sayMessage = args.join(" ");
-    // Then we delete the command message (sneaky, right?). The catch just ignores the error with a cute smiley thing.
-    message.delete().catch(O_o=>{}); 
-    // And we get the bot to say the thing: 
-    message.channel.send(sayMessage);
-  }
+
+    if (command === "announce") {
+        // Check if you can delete the message
+        if (message.member.hasPermission('ADMINISTRATOR')) {
+            if (message.deletable) message.delete();
+
+            if (args.length < 0) return message.reply(`Nothing to say?`).then(m => m.delete(5000));
+
+            // Role color
+            const roleColor = message.guild.me.highestRole.hexColor;
+            if (args[0].toLowerCase() === "ping") {
+                message.channel.send("[@everyone]" + "\n\n" + args.slice(1).join(" "));
+            } else {
+                // If the first argument is embed, send an embed,
+                // otherwise, send a normal message
+                if (args[0].toLowerCase() === "embed") {
+                    const embed = new Discord.RichEmbed()
+                        .setDescription(args.slice(1).join(" "))
+                        .setColor(0xED360F)
+                        .setTimestamp()
+
+                    message.channel.send(embed);
+
+                } else {
+                    message.channel.send(args.join(" "));
+                }
+
+            }
+        } else {
+            message.channel.send("You don't have permission to use this command.");
+        }
+    }
+
    if(command === "help") {
    	const embed = new Discord.RichEmbed();
    	embed.setColor(0xED360F);
@@ -188,85 +225,97 @@ message.channel.send( { embed: embed } );
    	embed.setAuthor("My specialities:", "https://a.imge.to/2019/05/30/vV5Mk.png");
    	embed.addField("IP", "Check EmperialsPE server IP.");
    	embed.addField("Info", "Check online player(s) on all server(s).");
-   	embed.addField("About", "information about me and the EmperialsPE.");
+       embed.addField("Vote", "Check online server voting status.");
    	embed.addField("Links", "Link(s) relating the server.");
    	embed.addField("Ping", "See your ping.");
    	embed.setFooter("Thank you for viewing my specialities.", "https://a.imge.to/2019/05/30/vV5Mk.png");
-   	message.author.send( { embed: embed } );
+       message.channel.send( { embed: embed } );
    	const heart = client.emojis.find(emoji => emoji.name === "heart");
-   	message.reply("Help sent, time to relax.");
    }
+    if(command === "links") {
+        const embed = new Discord.RichEmbed();
+        embed.setColor(0xED360F);
+        embed.setThumbnail("https://a.imge.to/2019/05/30/vV5Mk.png");
+        embed.addField("Shop", "https://shop.emperials.com/");
+        embed.addField("Discord", "https://discord.emperials.com/");
+        embed.addField("Vote", "https://vote.emperials.com/");
+        embed.addField("Employee Application", "ihttps://apply.emperials.com/");
+        message.channel.send( { embed: embed } );
+        const heart = client.emojis.find(emoji => emoji.name === "heart");
+    }
+
+    if(command === "ip") {
+        const embed = new Discord.RichEmbed();
+        embed.setColor(0xED360F);
+        embed.setThumbnail("https://a.imge.to/2019/05/30/vV5Mk.png");
+        embed.addField("IP", "play.emperials.net");
+        embed.addField("Port", "19132");
+        embed.setFooter("We hope to see you there!");
+        message.channel.send( { embed: embed } );
+        const heart = client.emojis.find(emoji => emoji.name === "heart");
+    }
   if(command === "kick") {
     // This command must be limited to mods and admins. In this example we just hardcode the role names.
-    // Please read on Array.some() to understand this bit: 
+    // Please read on Array.some() to understand this bit:
     // https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Array/some?
     if(!message.member.roles.some(r=>["Administrator", "Moderator"].includes(r.name)) )
       return message.reply("Sorry, you don't have permissions to use this!");
-    
+
     // Let's first check if we have a member and if we can kick them!
     // message.mentions.members is a collection of people that have been mentioned, as GuildMembers.
     // We can also support getting the member by ID, which would be args[0]
     let member = message.mentions.members.first() || message.guild.members.get(args[0]);
     if(!member)
       return message.reply("Please mention a valid member of this server");
-    if(!member.kickable) 
+    if(!member.kickable)
       return message.reply("I cannot kick this user! Do they have a higher role? Do I have kick permissions?");
-    
+
     // slice(1) removes the first part, which here should be the user mention or ID
     // join(' ') takes all the various parts to make it a single string.
     let reason = args.slice(1).join(' ');
     if(!reason) reason = "No reason provided";
-    
+
     // Now, time for a swift kick in the nuts!
     await member.kick(reason)
       .catch(error => message.reply(`Sorry ${message.author} I couldn't kick because of : ${error}`));
     message.reply(`${member.user.tag} has been kicked by ${message.author.tag} because: ${reason}`);
 
   }
-  
+
   if(command === "ban") {
     // Most of this command is identical to kick, except that here we'll only let admins do it.
     // In the real world mods could ban too, but this is just an example, right? ;)
     if(!message.member.roles.some(r=>["Administrator"].includes(r.name)) )
       return message.reply("Sorry, you don't have permissions to use this!");
-    
+
     let member = message.mentions.members.first();
     if(!member)
       return message.reply("Please mention a valid member of this server");
-    if(!member.bannable) 
+    if(!member.bannable)
       return message.reply("I cannot ban this user! Do they have a higher role? Do I have ban permissions?");
 
     let reason = args.slice(1).join(' ');
     if(!reason) reason = "No reason provided";
-    
+
     await member.ban(reason)
       .catch(error => message.reply(`Sorry ${message.author} I couldn't ban because of : ${error}`));
     message.reply(`${member.user.tag} has been banned by ${message.author.tag} because: ${reason}`);
   }
-  
+
   if(command === "purge") {
     // This command removes all messages from all users in the channel, up to 100.
-    
+
     // get the delete count, as an actual number.
     const deleteCount = parseInt(args[0], 10);
-    
+
     // Ooooh nice, combined conditions. <3
     if(!deleteCount || deleteCount < 2 || deleteCount > 100)
       return message.reply("Please provide a number between 2 and 100 for the number of messages to delete");
-    
+
     // So we get our messages, and delete them. Simple enough, right?
     const fetched = await message.channel.fetchMessages({limit: deleteCount});
     message.channel.bulkDelete(fetched)
       .catch(error => message.reply(`Couldn't delete messages because of: ${error}`));
-  }
-});
-client.on("message", (message) => {
-  if(responseObject[message.content]) {
-    message.channel.send(responseObject[message.content]);
-} // darn
-    const swearWords = ["4r5e", "5h1t", "5hit", "a55", "anal", "anus", "ar5e", "arrse", "arse", "ass", "ass-fucker", "asses", "assfucker", "assfukka", "asshole", "assholes", "asswhole", "a_s_s", "b!tch", "b00bs", "b17ch", "b1tch", "ballbag", "balls", "ballsack", "bastard", "beastial", "beastiality", "bellend", "bestial", "bestiality", "bi+ch", "biatch", "bitch", "bitcher", "bitchers", "bitches", "bitchin", "bitching", "bloody", "blow job", "blowjob", "blowjobs", "boiolas", "bollock", "bollok", "boner", "boob", "boobs", "booobs", "boooobs", "booooobs", "booooooobs", "breasts", "buceta", "bugger", "bum", "bunny fucker", "butt", "butthole", "buttmuch", "buttplug", "c0ck", "c0cksucker", "carpet muncher", "cawk", "chink", "cipa", "cl1t", "clit", "clitoris", "clits", "cnut", "cock", "cock-sucker", "cockface", "cockhead", "cockmunch", "cockmuncher", "cocks", "cocksuck", "cocksucked", "cocksucker", "cocksucking", "cocksucks", "cocksuka", "cocksukka", "cok", "cokmuncher", "coksucka", "coon", "cox", "crap", "cum", "cummer", "cumming", "cums", "cumshot", "cunilingus", "cunillingus", "cunnilingus", "cunt", "cuntlick", "cuntlicker", "cuntlicking", "cunts", "cyalis", "cyberfuc", "cyberfuck", "cyberfucked", "cyberfucker", "cyberfuckers", "cyberfucking", "d1ck", "damn", "dick", "dickhead", "dildo", "dildos", "dink", "dinks", "dirsa", "dlck", "dog-fucker", "doggin", "dogging", "donkeyribber", "doosh", "duche", "dyke", "ejaculate", "ejaculated", "ejaculates", "ejaculating", "ejaculatings", "ejaculation", "ejakulate", "f u c k", "f u c k e r", "f4nny", "fag", "fagging", "faggitt", "faggot", "faggs", "fagot", "fagots", "fags", "fanny", "fannyflaps", "fannyfucker", "fanyy", "fatass", "fcuk", "fcuker", "fcuking", "feck", "fecker", "felching", "fellate", "fellatio", "fingerfuck", "fingerfucked", "fingerfucker", "fingerfuckers", "fingerfucking", "fingerfucks", "fistfuck", "fistfucked", "fistfucker", "fistfuckers", "fistfucking", "fistfuckings", "fistfucks", "flange", "fook", "fooker", "fuck", "fucka", "fucked", "fucker", "fuckers", "fuckhead", "fuckheads", "fuckin", "fucking", "fuckings", "fuckingshitmotherfucker", "fuckme", "fucks", "fuckwhit", "fuckwit", "fudge packer", "fudgepacker", "fuk", "fuker", "fukker", "fukkin", "fuks", "fukwhit", "fukwit", "fux", "fux0r", "f_u_c_k", "gangbang", "gangbanged", "gangbangs", "gaylord", "gaysex", "goatse", "God", "god-dam", "god-damned", "goddamn", "goddamned", "hardcoresex", "hell", "heshe", "hoar", "hoare", "hoer", "homo", "hore", "horniest", "horny", "hotsex", "jack-off", "jackoff", "jap", "jerk-off", "jism", "jiz", "jizm", "jizz", "kawk", "knob", "knobead", "knobed", "knobend", "knobhead", "knobjocky", "knobjokey", "kock", "kondum", "kondums", "kum", "kummer", "kumming", "kums", "kunilingus", "l3i+ch", "l3itch", "labia", "lust", "lusting", "m0f0", "m0fo", "m45terbate", "ma5terb8", "ma5terbate", "masochist", "master-bate", "masterb8", "masterbat*", "masterbat3", "masterbate", "masterbation", "masterbations", "masturbate", "mo-fo", "mof0", "mofo", "mothafuck", "mothafucka", "mothafuckas", "mothafuckaz", "mothafucked", "mothafucker", "mothafuckers", "mothafuckin", "mothafucking", "mothafuckings", "mothafucks", "mother fucker", "motherfuck", "motherfucked", "motherfucker", "motherfuckers", "motherfuckin", "motherfucking", "motherfuckings", "motherfuckka", "motherfucks", "muff", "mutha", "muthafecker", "muthafuckker", "muther", "mutherfucker", "n1gga", "n1gger", "nazi", "nigg3r", "nigg4h", "nigga", "niggah", "niggas", "niggaz", "nigger", "niggers", "nob", "nob jokey", "nobhead", "nobjocky", "nobjokey", "numbnuts", "nutsack", "orgasim", "orgasims", "orgasm", "orgasms", "p0rn", "pawn", "pecker", "penis", "penisfucker", "phonesex", "phuck", "phuk", "phuked", "phuking", "phukked", "phukking", "phuks", "phuq", "pigfucker", "pimpis", "piss", "pissed", "pisser", "pissers", "pisses", "pissflaps", "pissin", "pissing", "pissoff", "poop", "porn", "porno", "pornography", "pornos", "prick", "pricks", "pron", "pube", "pusse", "pussi", "pussies", "pussy", "pussys", "rectum", "retard", "rimjaw", "rimming", "s hit", "s.o.b.", "sadist", "schlong", "screwing", "scroat", "scrote", "scrotum", "semen", "sex", "sh!+", "sh!t", "sh1t", "shag", "shagger", "shaggin", "shagging", "shemale", "shi+", "shit", "shitdick", "shite", "shited", "shitey", "shitfuck", "shitfull", "shithead", "shiting", "shitings", "shits", "shitted", "shitter", "shitters", "shitting", "shittings", "shitty", "skank", "slut", "sluts", "smegma", "smut", "snatch", "son-of-a-bitch", "spac", "spunk", "s_h_i_t", "t1tt1e5", "t1tties", "teets", "teez", "testical", "testicle", "tit", "titfuck", "tits", "titt", "tittie5", "tittiefucker", "titties", "tittyfuck", "tittywank", "titwank", "tosser", "turd", "tw4t", "twat", "twathead", "twatty", "twunt", "twunter", "v14gra", "v1gra", "vagina", "viagra", "vulva", "w00se", "wang", "wank", "wanker", "wanky", "whoar", "whore", "willies", "willy", "xrated", "xxx"];
-if( swearWords.some(word => message.content.includes(word)) ) {
-  message.reply("Cmo'n mate, watch your language.");
   }
 });
 client.on("message", message => {
@@ -301,7 +350,11 @@ client.on("message", message => {
     const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
     if(command === "points") {
-        return message.reply(`You currently have ${score.points} points and are level ${score.level}!`);
+        const embed = new Discord.RichEmbed()
+            .setAuthor("You are on level "+score.level+" with " +score.points+" point(s)!")
+            .setFooter("You can view top member(s) by typing /leaderboard!", "https://a.imge.to/2019/05/30/vV5Mk.png")
+            .setColor(0xED360F);
+        return message.channel.send({embed});
     }
     if(command === "leaderboard") {
         const top10 = sql.prepare("SELECT * FROM scores WHERE guild = ? ORDER BY points DESC LIMIT 10;").all(message.guild.id);
