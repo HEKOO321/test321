@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "better-sqlite3": "^5.4.0",
     "cleverbot-node": "^0.3.11",
     "discord-embed-maker": "^3.0.8",
